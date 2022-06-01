@@ -1,4 +1,4 @@
-From the Unix Manual:
+/* From the Unix Manual:
 int nftw(const char *dirpath,
 int (*fn) (const char *fpath, const struct stat *sb, int typeflag), int nopenfd);
 nftw() walks through the directory tree that is located under the directory dirpath, and calls fn() once for each entry in the tree. By default, directories are handled before the files and subdirectories they contain (preorder traversal). fn() is a function provided by the programmer.
@@ -11,7 +11,8 @@ When target-directory is missing, the current working directory will be used.
 In particular, you should use the system call nftw() to walk across a directory tree. This system call will do all the recursive walk for you and, each time it visits a file or a directory, it will call your own function (a function that you pass as a parameter to nftw()).
   
   
-### Program : 
+Program : 
+*/
 
 #include <ftw.h>
 #include <stdio.h>
