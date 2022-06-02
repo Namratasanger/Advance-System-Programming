@@ -13,7 +13,6 @@ In particular, you should use the system call nftw() to walk across a directory 
   
 Program : 
 */
-
 #include <ftw.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +24,7 @@ Program :
 
 #define BUF_LEN PATH_MAX
 
-void countCycles(const char *fpath, int typeflag,struct FTW *ftwbuf){
+static int countCycles(const char *fpath, const struct stat *sb,int typeflag,struct FTW *ftwbuf){
      // getting symbolic path link
     if(typeflag == FTW_SL){   
         char actualPath [PATH_MAX + 1];
@@ -36,51 +35,27 @@ void countCycles(const char *fpath, int typeflag,struct FTW *ftwbuf){
 
         char *originalFilePath = strdup(fpath);
 
-        printf("Standard error :  %s\n",strerror(errno));
         char *parentPath  = dirname(originalFilePath);
 
         while((loopLength) !=0){
-            if(parentPath == actualPath){    
+            if(strcmp(parentPath, actualPath) == 0){  
+                printf("Parent path : %s \t, Actual path : %s \n",parentPath, actualPath);  
                 countCycles++;
             }   
             loopLength--;
-            parentPath = dirname(parentPath);         
+            parentPath = dirname(parentPath); 
         }
         if(countCycles>0){
             printf("Count cycles : %d ",countCycles);
         }
     }
+    return 0;
 }
-
-static int display_info(const char *fpath, const struct stat *sb,int typeflag,struct FTW *ftwbuf)
-   {
-        int count = 0;
-       
-        printf("%-3s %d %2d %7jd   %-40s %d %s\n",
-            (typeflag == FTW_D) ?   "d"   : // directory
-                (typeflag == FTW_DNR) ? "dnr" : // unreadable directory
-                    (typeflag == FTW_DP) ?  "dp"  : // the path is having directory and depth is also defined
-                        (typeflag == FTW_F) ?   "f" : // regular file
-                            (typeflag == FTW_NS) ?  "ns"  : // no symbolic link
-                                (typeflag == FTW_SL) ?  "sl" : // symbolic links
-                                     (typeflag == FTW_SLN) ? "sln" : "???",
-            typeflag==FTW_SL ? typeflag : 0,
-            ftwbuf->level, (intmax_t) sb->st_size,
-            fpath, ftwbuf->base, fpath + ftwbuf->base);
-            countCycles(fpath, typeflag,ftwbuf);
-           
-        return 0;         
-    }
-
 
 int main(int argc, char *argv[]){
     int flags = 0;
-    if (argc > 2 && strchr(argv[2], 'd') != NULL)
-        flags |= FTW_DEPTH;
-    if (argc > 2 && strchr(argv[2], 'p') != NULL)
-        flags |= FTW_PHYS;
-    printf("%d\n", flags);
-    if (nftw((argc < 2) ? "." : argv[1], display_info, 20, FTW_PHYS) == -1) {
+  
+    if (nftw((argc < 2) ? "." : argv[1], countCycles, 20, FTW_PHYS) == -1) {
         perror("nftw");
         exit(EXIT_FAILURE);
     }
